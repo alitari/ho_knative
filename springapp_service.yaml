@@ -1,0 +1,30 @@
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: springapp
+  namespace: default
+spec:
+  runLatest:
+    configuration:
+      build:
+        apiVersion: build.knative.dev/v1alpha1
+        kind: Build
+        spec:
+          serviceAccountName: build-bot
+          source:
+            git:
+              url: https://github.com/alitari/ho_knative.git
+              revision: master
+          template:
+            name: kaniko
+            arguments:
+              - name: IMAGE
+                value: docker.io/alitari/springapp:latest
+              - name: DOCKERFILE
+                value: springapp/Dockerfile
+
+      revisionTemplate:
+        spec:
+          container:
+            image: docker.io/alitari/springapp:latest
+            imagePullPolicy: Always
