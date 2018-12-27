@@ -29,7 +29,7 @@
 
 curl -H "Host: helloworld-go.default.example.com" http://35.195.246.230
 
-## Build and Deploy
+## Build and Deploy a springapp
 
 ### Use the kaniko build template
 
@@ -42,3 +42,13 @@ curl -H "Host: helloworld-go.default.example.com" http://35.195.246.230
 ### service account for build refers to dockerhub secret
 
 `kubectl apply --filename build_serviceaccount.yaml`
+
+### create service "springapp" from this repo
+
+`kubectl apply --filename springapp_service.yaml`
+
+### call the service
+
+Find the external ip in service `knative-ingressgateway`
+example for `35.233.38.14`:
+curl -H "Host: springapp.default.example.com" http://35.233.38.14/messageapp
