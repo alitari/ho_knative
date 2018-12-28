@@ -52,3 +52,7 @@ curl -H "Host: helloworld-go.default.example.com" http://35.195.246.230
 Find the external ip in service `knative-ingressgateway`
 example for `35.233.38.14`:
 curl -H "Host: springapp.default.example.com" http://35.233.38.14/messageapp
+
+### create a new build
+
+`kubectl apply --filename springapp/springapp_service.yaml`
