@@ -13,6 +13,7 @@ RUN apt-get update && \
   locales \
   wget \
   bash-completion \
+  vim \
   && locale-gen en_US.UTF-8
 
 # Switch back to dialog for any ad-hoc use of apt-get
