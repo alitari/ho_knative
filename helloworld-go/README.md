@@ -1,6 +1,24 @@
 # Serving helloworld-go
 
-`kubectl apply --filename helloworld-go.yaml`
+## create service
+
+```bash
+# install
+kubectl apply --filename helloworld-go.yaml
+# show
+kubectl get ksvc helloworld-go -n default  --output=custom-columns=NAME:.metadata.name,URL:.status.url
+```
+
+## call service
+
+If you cluster is on your `localhost` you must use `host.docker.internal` e.g.
+
+`curl -H "Host: helloworld-go.default.example.com" http://host.docker.internal`
+
+otherwise 
+
+`curl -H "Host: helloworld-go.default.example.com" $(glooctl proxy url --name knative-external-proxy)`
+
 
 ## Created CRDS
 

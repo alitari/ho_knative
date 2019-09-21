@@ -1,0 +1,13 @@
+{
+	"name": "knative",
+	"dockerFile": "Dockerfile",
+	"runArgs": [
+	],
+	"extensions": [
+		"ms-kubernetes-tools.vscode-kubernetes-tools"
+	],
+	"settings":{
+
+	},
+	// "postCreateCommand": "export ZSH_THEME=powerlevel9k/powerlevel9k"
+}

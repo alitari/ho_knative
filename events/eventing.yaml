@@ -1,0 +1,225 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: knative-eventing
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eventing-controller
+  namespace: knative-eventing
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eventing-controller-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: eventing-controller
+  namespace: knative-eventing
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: channels.eventing.knative.dev
+spec:
+  group: eventing.knative.dev
+  names:
+    categories:
+    - all
+    - knative
+    - eventing
+    kind: Channel
+    plural: channels
+    shortNames:
+    - chan
+    singular: channel
+  scope: Namespaced
+  subresources:
+    status: {}
+  version: v1alpha1
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: clusterchannelprovisioners.eventing.knative.dev
+spec:
+  group: eventing.knative.dev
+  names:
+    categories:
+    - all
+    - knative
+    - eventing
+    - provisioner
+    kind: ClusterChannelProvisioner
+    plural: clusterchannelprovisioners
+    shortNames:
+    - ccp
+    singular: clusterchannelprovisioner
+  scope: Cluster
+  subresources:
+    status: {}
+  version: v1alpha1
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: subscriptions.eventing.knative.dev
+spec:
+  group: eventing.knative.dev
+  names:
+    categories:
+    - all
+    - knative
+    - eventing
+    kind: Subscription
+    plural: subscriptions
+    shortNames:
+    - sub
+    singular: subscription
+  scope: Namespaced
+  subresources:
+    status: {}
+  version: v1alpha1
+
+---
+apiVersion: v1
+data:
+  default-channel-config: |
+    clusterdefault:
+      apiversion: eventing.knative.dev/v1alpha1
+      kind: ClusterChannelProvisioner
+      name: in-memory-channel
+    namespacedefaults:
+      some-namespace:
+        apiversion: eventing.knative.dev/v1alpha1
+        kind: ClusterChannelProvisioner
+        name: some-other-provisioner
+kind: ConfigMap
+metadata:
+  name: default-channel-webhook
+  namespace: knative-eventing
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    role: webhook
+  name: webhook
+  namespace: knative-eventing
+spec:
+  ports:
+  - port: 443
+    targetPort: 443
+  selector:
+    role: webhook
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventing-controller
+  namespace: knative-eventing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eventing-controller
+  template:
+    metadata:
+      labels:
+        app: eventing-controller
+    spec:
+      containers:
+      - args:
+        - -logtostderr
+        - -stderrthreshold
+        - INFO
+        - --experimentalControllers=subscription.eventing.knative.dev
+        image: gcr.io/knative-releases/github.com/knative/eventing/cmd/controller@sha256:ecefa8fb0de1bb69ddfc13a212424d4d09232dc566c3653810c20bbf3ef80aa7
+        name: eventing-controller
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/config-logging
+          name: config-logging
+      serviceAccountName: eventing-controller
+      volumes:
+      - configMap:
+          name: config-logging
+        name: config-logging
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook
+  namespace: knative-eventing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook
+      role: webhook
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app: webhook
+        role: webhook
+    spec:
+      containers:
+      - image: gcr.io/knative-releases/github.com/knative/eventing/cmd/webhook@sha256:3391e2dfc6461261be18739adcddaf69ba8e5643d1ebfac3b7b6a80c9907104c
+        name: webhook
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/config-logging
+          name: config-logging
+      serviceAccountName: eventing-controller
+      volumes:
+      - configMap:
+          name: config-logging
+        name: config-logging
+
+---
+apiVersion: v1
+data:
+  loglevel.controller: info
+  loglevel.webhook: info
+  zap-logger-config: |
+    {
+      "level": "info",
+      "development": false,
+      "outputPaths": ["stdout"],
+      "errorOutputPaths": ["stderr"],
+      "encoding": "json",
+      "encoderConfig": {
+        "timeKey": "ts",
+        "levelKey": "level",
+        "nameKey": "logger",
+        "callerKey": "caller",
+        "messageKey": "msg",
+        "stacktraceKey": "stacktrace",
+        "lineEnding": "",
+        "levelEncoder": "",
+        "timeEncoder": "iso8601",
+        "durationEncoder": "",
+        "callerEncoder": ""
+      }
+    }
+kind: ConfigMap
+metadata:
+  name: config-logging
+  namespace: knative-eventing
+
+---

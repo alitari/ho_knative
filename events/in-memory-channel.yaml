@@ -1,0 +1,178 @@
+apiVersion: eventing.knative.dev/v1alpha1
+kind: ClusterChannelProvisioner
+metadata:
+  name: in-memory-channel
+spec: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: in-memory-channel-controller
+  namespace: knative-eventing
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: in-memory-channel-controller
+rules:
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - channels
+  - channels/status
+  - clusterchannelprovisioners
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - channels/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+- apiGroups:
+  - ""
+  resourceNames:
+  - in-memory-channel-clusterbus
+  resources:
+  - services
+  verbs:
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resourceNames:
+  - in-memory-channel-dispatcher-config-map
+  resources:
+  - configmaps
+  verbs:
+  - update
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - virtualservices
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: in-memory-channel-controller
+  namespace: knative-eventing
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: in-memory-channel-controller
+subjects:
+- kind: ServiceAccount
+  name: in-memory-channel-controller
+  namespace: knative-eventing
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: in-memory-channel-controller
+  namespace: knative-eventing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      clusterChannelProvisioner: in-memory-channel
+      role: controller
+  template:
+    metadata:
+      labels:
+        clusterChannelProvisioner: in-memory-channel
+        role: controller
+    spec:
+      containers:
+      - image: gcr.io/knative-releases/github.com/knative/eventing/pkg/controller/eventing/inmemory/controller@sha256:6452c0ecc6099c5a7a6b9f94763c982ec77ed5c9e560619362a8573629dc67dd
+        name: controller
+      serviceAccountName: in-memory-channel-controller
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: in-memory-channel-dispatcher
+  namespace: knative-eventing
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: in-memory-channel-dispatcher
+  namespace: knative-eventing
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: in-memory-channel-dispatcher
+  namespace: knative-eventing
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: in-memory-channel-dispatcher
+subjects:
+- kind: ServiceAccount
+  name: in-memory-channel-dispatcher
+  namespace: knative-eventing
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: in-memory-channel-dispatcher
+  namespace: knative-eventing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      clusterChannelProvisioner: in-memory-channel
+      role: dispatcher
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        clusterChannelProvisioner: in-memory-channel
+        role: dispatcher
+    spec:
+      containers:
+      - args:
+        - --sidecar_port=8080
+        - --config_map_noticer=watcher
+        - --config_map_namespace=knative-eventing
+        - --config_map_name=in-memory-channel-dispatcher-config-map
+        image: gcr.io/knative-releases/github.com/knative/eventing/cmd/fanoutsidecar@sha256:a1c331166249dd82d78dffb26ad89e9c592a13a88b9283ab2a2603629579e3ef
+        name: dispatcher
+      serviceAccountName: in-memory-channel-dispatcher
+
+---

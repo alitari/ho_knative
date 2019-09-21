@@ -1,26 +1,20 @@
-# Build and Deploy a springapp
+# Tektron pipelines 
 
-## Use the kaniko build template
+![Tektron pipelines](https://tekton.dev/img/logos/tekton-horizontal-color.png)
 
-`kubectl apply --filename kaniko.yaml`
+## install
 
-## secret for image registry [dockerhub](https://id.docker.com/login)
+```bash
+kubectl apply --filename https://storage.googleapis.com/tekton-releases/latest/release.yaml
+```
 
-`kubectl apply --filename dockerhub_secret.yaml`
+## run hello world task
 
-## service account for build refers to dockerhub secret
-
-`kubectl apply --filename build_serviceaccount.yaml`
-
-## create service "springapp" from this repo
-
-`kubectl apply --filename springapp_service.yaml`
-
-## call the service
-
-Find the external ip in service `knative-ingressgateway`
-`curl -H "Host: springapp.default.example.com" http://localhost/springapp/form`
-
-### trigger a new build
-
-???
+```bash
+# create task
+kubectl apply --filename helloworld-task.yaml
+# run task
+kubectl apply --filename helloworld-taskrun.yaml
+# inspect task run
+kubectl get taskrun echo-hello-world-task-run
+```
