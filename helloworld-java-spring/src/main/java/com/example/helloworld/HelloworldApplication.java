@@ -5,6 +5,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 @SpringBootApplication
 public class HelloworldApplication {
@@ -16,7 +18,15 @@ public class HelloworldApplication {
 	class HelloworldController {
 		@GetMapping("/")
 		String hello() {
-			return "Hello " + target + "!";
+			InetAddress ip;
+			String hostname;
+			try {
+				ip = InetAddress.getLocalHost();
+				hostname = ip.getHostName();
+				return "<h1>Hello " + target + "!</h1><br>Hostname:"+hostname;
+			} catch (UnknownHostException e) {
+				return e.toString();
+			}
 		}
 	}
 
