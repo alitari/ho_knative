@@ -18,3 +18,45 @@ kubectl apply --filename helloworld-taskrun.yaml
 # inspect task run
 kubectl get taskrun echo-hello-world-task-run
 ```
+
+## build a java spring app
+
+| source code | task | destination |
+| ------------| -------- | ----------- |
+|`java-spring-github-piperes`| `git-docker-build-task` | `java-spring-image-piperes` |
+
+### docker registry credentials
+
+As we push in a registry we need to create a secret for the registry credentials:
+
+```bash
+./create_registry_auth.sh
+```
+
+Link the created secret `registry-auth` to the default service account:
+
+```bash
+kubectl edit sa default
+```
+
+### build the spring app
+
+```bash
+# create java spring app resources
+kubectl apply --filename java-spring-github-piperes.yaml
+kubectl apply --filename java-spring-image-piperes.yaml
+# create task
+kubectl apply --filename git-docker-build-task.yaml
+# run task
+kubectl apply --filename java-spring-taskrun.yaml
+# see whats going on
+kubectl get tekton-pipelines
+# see the logs
+kubectl -n tekton-pipelines logs $(kubectl get pod --selector="tekton.dev/taskRun=java-spring-taskrun" -o=name) -c step-build-and-push | less
+```
+
+See the build result here `https://hub.docker.com/r/alitari/helloworld-java-spring` and/or run the image:
+
+```bash
+`docker run -it -p 8085:8080 -e PORT=8080 -e TARGET="Tekton" alitari/helloworld-java-spring`
+```
