@@ -1,6 +1,6 @@
-# Tektron pipelines 
+# Tekton pipelines 
 
-![Tektron pipelines](https://tekton.dev/img/logos/tekton-horizontal-color.png)
+![Tekton pipelines](https://tekton.dev/img/logos/tekton-horizontal-color.png)
 
 ## install
 
