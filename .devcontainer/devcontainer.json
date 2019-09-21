@@ -4,10 +4,11 @@
 	"runArgs": [
 	],
 	"extensions": [
-		"ms-kubernetes-tools.vscode-kubernetes-tools"
+		"ms-kubernetes-tools.vscode-kubernetes-tools",
+		"ms-azuretools.vscode-docker"
 	],
 	"settings":{
 
-	},
+	}
 	// "postCreateCommand": "export ZSH_THEME=powerlevel9k/powerlevel9k"
 }
