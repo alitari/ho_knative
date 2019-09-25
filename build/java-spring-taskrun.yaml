@@ -7,14 +7,14 @@ spec:
     name: git-docker-build-task
   inputs:
     resources:
-      - name: docker-source
+      - name: source
         resourceRef:
           name: helloworld-java-spring-github
     params:
       - name: pathToDockerFile
         value: Dockerfile
       - name: pathToContext
-        value: /workspace/docker-source/helloworld-java-spring
+        value: /workspace/source/helloworld-java-spring
   outputs:
     resources:
       - name: builtImage
