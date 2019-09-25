@@ -61,6 +61,11 @@ RUN curl -LO https://github.com/knative/client/releases/download/v0.2.0/kn-linux
     && chmod a+x kn-linux-amd64 \
     && mv kn-linux-amd64 /usr/local/bin/kn
 
+# tekton client
+RUN curl -LO https://github.com/tektoncd/cli/releases/download/v0.4.0/tkn_0.4.0_Linux_x86_64.tar.gz
+RUN sudo tar xvzf tkn_0.4.0_Linux_x86_64.tar.gz -C /usr/local/bin/ tkn
+
+
 # set home
 ENV HOME /home/$USER_NAME
 

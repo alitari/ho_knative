@@ -4,5 +4,6 @@ source <(kubectl completion bash)
 source <(glooctl completion bash)
 source <(helm completion bash)
 source <(kn completion bash)
+source <(tkn completion bash)
 
 
