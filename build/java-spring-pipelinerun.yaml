@@ -1,0 +1,14 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: java-spring-pipelinerun-1
+spec:
+  pipelineRef:
+    name: java-spring-pipeline
+  resources:
+    - name: source-repo
+      resourceRef:
+        name: helloworld-java-spring-github
+    - name: web-image
+      resourceRef:
+        name: helloworld-java-spring-image
