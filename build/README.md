@@ -8,6 +8,15 @@
 kubectl apply --filename https://storage.googleapis.com/tekton-releases/latest/release.yaml
 ```
 
+### install dashboard
+
+Note: the ingress works omly if an [ingress controller](https://github.com/helm/charts/tree/master/stable/nginx-ingress) is already installed. The dashboard is then accessible on `http://127.0.0.1.nip.io`
+
+```bash
+kubectl apply --filename https://github.com/tektoncd/dashboard/releases/download/v0.1.1/release.yaml
+kubectl apply -f dashboard-ingress.yaml
+```
+
 ## run hello world task
 
 ```bash
@@ -19,9 +28,9 @@ kubectl apply --filename helloworld-taskrun.yaml
 kubectl get taskrun echo-hello-world-task-run
 ```
 
-## build a java spring app
+## create and run a task to build a java spring app
 
-| source code | task | destination |
+| source | task | destination |
 | ------------| -------- | ----------- |
 |`java-spring-github-piperes`| `git-docker-build-task` | `java-spring-image-piperes` |
 
@@ -60,3 +69,18 @@ See the build result here `https://hub.docker.com/r/alitari/helloworld-java-spri
 ```bash
 `docker run -it -p 8085:8080 -e PORT=8080 -e TARGET="Tekton" alitari/helloworld-java-spring`
 ```
+
+## create and run a pipeline to build and deploy a java spring app
+
+| in          | task     | out |
+| ------------| -------- | -------- |
+|`java-spring-github-piperes` | `git-docker-build-task`| `helloworld-java-spring-image` |
+|`helloworld-java-spring-image` | `deploy-kubectl-task`| |
+
+### create task and pipeline
+
+```bash
+kubectl apply -f deploy-kubectl-task.yaml
+kubectl apply -f java-spring-pipeline.yaml
+```
+
